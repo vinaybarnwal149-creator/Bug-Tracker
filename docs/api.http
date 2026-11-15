@@ -1,0 +1,146 @@
+### Variables
+@baseUrl = http://localhost:5000/api/v1
+@contentType = application/json
+
+### 1. Health Check
+GET {{baseUrl}}/health
+
+### 2. Auth - Register Owner
+# @name registerOwner
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "name": "Alex Owner",
+  "email": "owner@demo.com",
+  "password": "Password123!"
+}
+
+### 3. Auth - Login
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "owner@demo.com",
+  "password": "Password123!"
+}
+
+### Extract token from response
+@authToken = {{login.response.body.data.accessToken}}
+
+### 4. Auth - Me
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{authToken}}
+
+### 5. Projects - List My Projects
+GET {{baseUrl}}/projects
+Authorization: Bearer {{authToken}}
+
+### 6. Projects - Create Project
+# @name createProject
+POST {{baseUrl}}/projects
+Authorization: Bearer {{authToken}}
+Content-Type: {{contentType}}
+
+{
+  "title": "Website Revamp",
+  "key": "WEB",
+  "description": "Complete website refresh and optimization."
+}
+
+@projectId = {{createProject.response.body.data.id}}
+
+### 7. Projects - Key Availability
+GET {{baseUrl}}/projects/key-available?key=WEB
+Authorization: Bearer {{authToken}}
+
+### 8. Projects - Get Project by ID
+GET {{baseUrl}}/projects/{{projectId}}
+Authorization: Bearer {{authToken}}
+
+### 9. Projects - Get Stats
+GET {{baseUrl}}/projects/{{projectId}}/stats
+Authorization: Bearer {{authToken}}
+
+### 10. Members - Add Member
+POST {{baseUrl}}/projects/{{projectId}}/members
+Authorization: Bearer {{authToken}}
+Content-Type: {{contentType}}
+
+{
+  "email": "dev@demo.com",
+  "role": "developer"
+}
+
+### 11. Tickets - Create Ticket
+# @name createTicket
+POST {{baseUrl}}/projects/{{projectId}}/tickets
+Authorization: Bearer {{authToken}}
+Content-Type: {{contentType}}
+
+{
+  "title": "Fix navbar mobile dropdown issue",
+  "description": "The dropdown does not dismiss when clicking outside on mobile devices.",
+  "type": "bug",
+  "priority": "high",
+  "status": "todo",
+  "labels": ["frontend", "mobile"]
+}
+
+@ticketId = {{createTicket.response.body.data.id}}
+
+### 12. Tickets - Get Project Board
+GET {{baseUrl}}/projects/{{projectId}}/board
+Authorization: Bearer {{authToken}}
+
+### 13. Tickets - Get Ticket List (Paginated)
+GET {{baseUrl}}/projects/{{projectId}}/tickets?page=1&limit=20&sort=-createdAt
+Authorization: Bearer {{authToken}}
+
+### 14. Tickets - Get Ticket Detail
+GET {{baseUrl}}/tickets/{{ticketId}}
+Authorization: Bearer {{authToken}}
+
+### 15. Tickets - Move Ticket
+PATCH {{baseUrl}}/tickets/{{ticketId}}/move
+Authorization: Bearer {{authToken}}
+Content-Type: {{contentType}}
+
+{
+  "status": "in_progress",
+  "afterTicketId": null,
+  "beforeTicketId": null
+}
+
+### 16. Comments - Add Comment
+# @name addComment
+POST {{baseUrl}}/tickets/{{ticketId}}/comments
+Authorization: Bearer {{authToken}}
+Content-Type: {{contentType}}
+
+{
+  "body": "Investigating this bug now on iOS Safari."
+}
+
+@commentId = {{addComment.response.body.data.id}}
+
+### 17. Comments - Add Reply
+POST {{baseUrl}}/tickets/{{ticketId}}/comments
+Authorization: Bearer {{authToken}}
+Content-Type: {{contentType}}
+
+{
+  "body": "I reproduced it on Android Chrome too.",
+  "parentId": "{{commentId}}"
+}
+
+### 18. Comments - Get Ticket Comments
+GET {{baseUrl}}/tickets/{{ticketId}}/comments
+Authorization: Bearer {{authToken}}
+
+### 19. Auth - Refresh Token
+POST {{baseUrl}}/auth/refresh
+
+### 20. Auth - Logout
+POST {{baseUrl}}/auth/logout
